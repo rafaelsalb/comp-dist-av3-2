@@ -1,0 +1,9 @@
+{
+    "num_nodes": "int",
+    "min_neighbors": "int",
+    "max_neighbors": "int",
+    "resources": {
+        "n1": ["str"]
+    },
+    "edges": [["str", "str"]]
+}
