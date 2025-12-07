@@ -1,8 +1,11 @@
 from config import Config
 from loader import NetworkLoader
+from cache import Cache
+from pathlib import Path
+import json
 
 
-def example(case_index: int = 1, search_method: str = "bfs", requester_id: str | None = None, resource: str | None = None):
+def example(case_index: int = 1, search_method: str = "bfs", requester_id: str | None = None, resource: str | None = None, ttl: int | None = None, use_cache: bool = False, cache_file: str | None = None):
     if requester_id is None or resource is None:
         raise ValueError("requester_id and resource must be provided for the example function.")
     case_path = ""
@@ -17,13 +20,13 @@ def example(case_index: int = 1, search_method: str = "bfs", requester_id: str |
             print(f"Caso de exemplo {case_index} não encontrado.")
             return
     network = NetworkLoader().load(case_path)
-    found = network.fetch(requester_id, resource, search_method=search_method)
+    found = network.fetch(requester_id, resource, search_method=search_method, ttl=ttl, use_cache=use_cache, cache_file=cache_file)
     print(f"Resource {resource} found by {requester_id} using {search_method}: {found}")
 
-def case(case_path: str, search_method: str = "bfs", requester_id: str | None = None, resource: str | None = None, ttl: int | None = None):
+def case(case_path: str, search_method: str = "bfs", requester_id: str | None = None, resource: str | None = None, ttl: int | None = None, use_cache: bool = False, cache_file: str | None = None):
     if requester_id is None or resource is None:
         raise ValueError("requester_id and resource must be provided for the case function.")
     print(f"Executando o caso específico: {case_path}...")
     network = NetworkLoader().load(case_path)
-    found = network.fetch(requester_id, resource, search_method=search_method, ttl=ttl)
+    found = network.fetch(requester_id, resource, search_method=search_method, ttl=ttl, use_cache=use_cache, cache_file=cache_file)
     print(f"Resource {resource} found by {requester_id} using {search_method}: {found}")
