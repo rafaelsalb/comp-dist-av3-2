@@ -31,7 +31,6 @@ class NetworkSearch:
             if use_cache:
                 cache_result = self._use_cache(target_resource, queue[0][1])
                 if cache_result is not None:
-                    self.cache.update(target_resource, cache_result)
                     return cache_result
 
             current_node_id, path = queue.pop(0)
@@ -61,7 +60,6 @@ class NetworkSearch:
             if use_cache:
                 cache_result = self._use_cache(target_resource, stack[-1][1])
                 if cache_result is not None:
-                    self.cache.update(target_resource, cache_result)
                     return cache_result
 
             current_node_id, path = stack.pop()
@@ -92,7 +90,6 @@ class NetworkSearch:
             if use_cache:
                 cache_result = self._use_cache(target_resource, path)
                 if cache_result is not None:
-                    self.cache.update(target_resource, cache_result)
                     return cache_result
 
             current_node = self.network[current_node_id]

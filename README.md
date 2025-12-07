@@ -81,3 +81,60 @@ Execute os testes com:
 ```bash
 pytest tests/test_search.py -v
 ```
+
+## Validação e Benchmark
+
+O módulo de validação permite comparar o desempenho dos diferentes métodos de busca com e sem cache em uma rede hexagonal robusta.
+
+### Executar Benchmark
+
+Para executar o benchmark completo:
+
+```bash
+cd validation
+python benchmark.py
+```
+
+O benchmark irá:
+- Usar uma rede hexagonal com 15 nós e 23 recursos
+- Testar todos os métodos de busca (BFS, DFS, Random Walk)
+- Executar cada método com e sem cache
+- Realizar ~690 queries totais (15 nós × 23 recursos × 3 métodos × 2 modos de cache)
+- Gerar arquivo `results.csv` com os resultados
+
+**Tempo estimado**: 2-5 minutos
+
+### Analisar Resultados
+
+Após executar o benchmark, analise os resultados com o Jupyter notebook:
+
+```bash
+cd validation
+jupyter notebook analysis.ipynb
+```
+
+O notebook gera:
+1. **Tabelas estatísticas**: Média, mediana, mín/máx de steps e tempo por método
+2. **Gráficos comparativos**: Barras comparando cached vs non-cached
+3. **Histogramas de distribuição**: Visualização da distribuição de steps para cada método
+4. **Análise de performance**: Percentual de melhoria com cache
+
+### Estrutura de Resultados
+
+O arquivo `results.csv` contém:
+- `node_id`: Nó que iniciou a busca
+- `resource`: Recurso buscado
+- `search_method`: Método usado (bfs, dfs, random)
+- `use_cache`: Se cache foi usado (True/False)
+- `steps`: Número de saltos até encontrar o recurso
+- `time_ms`: Tempo de execução em milissegundos
+
+### Arquivos de Validação
+
+```
+validation/
+├── hexagonal_network.json  # Rede de teste
+├── benchmark.py            # Script de benchmark
+├── analysis.ipynb          # Análise com Polars e Matplotlib
+└── results.csv             # Resultados (gerado pelo benchmark)
+```
