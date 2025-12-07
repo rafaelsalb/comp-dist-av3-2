@@ -1,0 +1,3 @@
+[console_scripts]
+case = scripts.run:case
+example = scripts.run:example
