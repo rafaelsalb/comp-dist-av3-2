@@ -4,10 +4,13 @@ src/config.py
 src/loader.py
 src/main.py
 src/search.py
+src/cache/__init__.py
+src/cache/cache.py
 src/comp_dist_av3_2.egg-info/PKG-INFO
 src/comp_dist_av3_2.egg-info/SOURCES.txt
 src/comp_dist_av3_2.egg-info/dependency_links.txt
 src/comp_dist_av3_2.egg-info/entry_points.txt
+src/comp_dist_av3_2.egg-info/requires.txt
 src/comp_dist_av3_2.egg-info/top_level.txt
 src/graph/__init__.py
 src/graph/graph.py
@@ -21,3 +24,4 @@ src/network/peer.py
 src/scripts/__init__.py
 src/scripts/create_case.py
 src/scripts/run.py
+tests/test_search.py
