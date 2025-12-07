@@ -7,10 +7,11 @@ if TYPE_CHECKING:
 
 
 class Cache:
-    def __init__(self, nodes: dict[str, dict[str, list[str]]], file_path: Path, network: "Network"):
+    def __init__(self, nodes: dict[str, dict[str, list[str]]], file_path: Path, network: "Network", deferred_write: bool = False):
         self.nodes: dict[str, dict[str, list[str]]] = nodes
         self.path: Path = file_path
         self.network: "Network" = network
+        self.deferred_write: bool = deferred_write
 
     def __getitem__(self, node_id: str) -> dict[str, list[str]] | None:
         return self.nodes.get(node_id)
@@ -45,5 +46,14 @@ class Cache:
                 self.nodes[current_node] = {}
             self.nodes[current_node][resource] = remaining_path
 
+        if not self.deferred_write:
+            self._write_to_file()
+
+    def flush(self) -> None:
+        """Write cache to file. Use this when deferred_write is enabled."""
+        self._write_to_file()
+
+    def _write_to_file(self) -> None:
+        """Internal method to write cache to file."""
         with self.path.open("w") as f:
             json.dump(self.nodes, f, indent=2)

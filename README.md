@@ -1,72 +1,156 @@
-# Distributed Systems Cache Simulation
+# Sistema de Busca Distribuída com Cache em Redes P2P
 
-Simulação de sistema de cache distribuído para busca de recursos em redes P2P.
+## Sobre o Projeto
 
-## Instalação
+Este projeto implementa um simulador de sistema distribuído para busca de recursos em redes Peer-to-Peer (P2P) com suporte a cache. O sistema permite avaliar diferentes algoritmos de busca (BFS, DFS, Random Walk) e medir o impacto do uso de cache na performance de buscas distribuídas.
 
-```bash
-uv sync
+**Funcionalidades principais:**
+
+- Criação de redes com topologias arbitrárias (incluindo redes hexagonais)
+- Distribuição de recursos entre nós da rede
+- Algoritmos de busca com TTL (Time To Live)
+- Sistema de cache distribuído com validação de caminhos
+- Análise de performance com visualizações e estatísticas
+
+## Arquitetura
+
+O sistema é composto por quatro classes principais:
+
+### 1. Graph (Grafo)
+
+**Responsabilidade:** Estrutura de dados base que representa a topologia da rede.
+
+```python
+class Graph:
+    nodes: list[Node]              # Lista de nós na rede
+    neighbors: dict[str, list[str]] # Mapa de vizinhos de cada nó
 ```
 
-## Uso
+**Características:**
 
-### Exemplos pré-configurados
+- Representa conexões entre nós (arestas do grafo)
+- Suporta criação a partir de schemas JSON
+- Permite consulta e modificação dinâmica de nós
+- Base para construção de redes mais complexas
+
+### 2. Network (Rede)
+
+**Responsabilidade:** Extensão do Graph com conceito de recursos hospedados em nós.
+
+```python
+class Network:
+    graph: Graph  # Grafo base
+
+    def fetch(self, requester_id, resource, search_method, ttl, use_cache, cache_file)
+```
+
+**Características:**
+
+- Cada nó pode hospedar múltiplos recursos
+- Fornece interface de alto nível para buscas (`fetch()`)
+- Integra automaticamente com Cache e NetworkSearch
+- Carrega/salva cache de arquivo JSON quando habilitado
+
+### 3. Cache
+
+**Responsabilidade:** Sistema de cache distribuído que armazena caminhos conhecidos para recursos.
+
+```python
+class Cache:
+    nodes: dict[str, dict[str, list[str]]]  # Cache por nó: {node: {resource: path}}
+    deferred_write: bool                     # Modo de escrita diferida
+
+    def follow(self, cache_path, current_path, target_resource) -> list[str]
+    def update(self, resource, network_path)
+    def flush()  # Escreve cache no arquivo (modo diferido)
+```
+
+**Características:**
+
+- Cada nó mantém cache de caminhos para recursos
+- Armazena caminhos relativos (não absolutos)
+- Valida caminhos antes de usar (verifica se nós e recursos ainda existem)
+- Suporta modo **deferred write** para otimizar performance (reduz I/O de 60.000 para 3 escritas)
+- Cache persistente em arquivo JSON
+
+**Como funciona:**
+
+1. Quando um recurso é encontrado, o caminho é armazenado em todos os nós intermediários
+2. Em buscas futuras, verifica se existe caminho em cache
+3. Se existe, valida o caminho (método `follow()`)
+4. Se válido, retorna caminho imediatamente sem busca completa
+
+### 4. NetworkSearch
+
+**Responsabilidade:** Implementa algoritmos de busca em grafos com suporte a cache.
+
+```python
+class NetworkSearch:
+    network: Network
+    ttl: int         # Limite de saltos
+    cache: Cache     # Cache opcional
+
+    def bfs(self, start_node_id, target_resource, use_cache) -> list[str]
+    def dfs(self, start_node_id, target_resource, use_cache) -> list[str]
+    def random_walk(self, start_node_id, target_resource, use_cache) -> list[str]
+```
+
+**Algoritmos implementados:**
+
+- **BFS (Breadth-First Search):** Busca em largura, garante caminho mais curto
+- **DFS (Depth-First Search):** Busca em profundidade, explora um ramo completamente
+- **Random Walk:** Caminhada aleatória, simula comportamento não-determinístico
+
+**Características:**
+
+- TTL limita profundidade de busca (previne loops infinitos)
+- Integração transparente com cache
+- Retorna caminho completo ou `None` se não encontrado
+- Cache verificado a cada iteração do algoritmo
+
+## Uso do Sistema
+
+### Exemplos Pré-configurados
 
 ```bash
+# BFS com exemplo 1
 uv run example --index 0 --search-method bfs --requester-id n1 --resource r1 --ttl 24
-```
 
-```bash
+# DFS com exemplo 2
 uv run example --index 1 --search-method dfs --requester-id n1 --resource r1 --ttl 24
 ```
 
-### Caso customizado
+### Caso Customizado
 
 ```bash
-uv run case --path teste.json --search-method random --requester-id n1 --resource r1 --ttl 24
+uv run case --path minha_rede.json --search-method random --requester-id n1 --resource r1 --ttl 24
 ```
 
 ### Uso com Cache
 
-Para habilitar o sistema de cache, adicione as flags `--use-cache` e opcionalmente `--cache-file`:
-
 ```bash
-# Usando cache com arquivo padrão (cache.json)
+# Cache com arquivo padrão (cache.json)
 uv run example --index 0 --search-method bfs --requester-id n1 --resource r1 --ttl 24 --use-cache
 
-# Especificando arquivo de cache customizado
-uv run case --path teste.json --search-method bfs --requester-id n1 --resource r1 --ttl 24 --use-cache --cache-file my_cache.json
+# Cache com arquivo customizado
+uv run case --path rede.json --search-method bfs --requester-id n1 --resource r1 --ttl 24 --use-cache --cache-file meu_cache.json
 ```
 
 **Opções de cache:**
+
 - `--use-cache`: Habilita o sistema de cache
 - `--cache-file <path>`: Define o arquivo de cache (padrão: `cache.json`)
 
-O cache armazena os caminhos conhecidos para cada recurso em cada nó da rede. Quando habilitado:
-1. Antes de iniciar a busca, verifica se existe um caminho em cache
-2. Se encontrado, valida se o caminho ainda é válido
-3. Se válido, usa o caminho em cache (economizando buscas)
-4. Atualiza o cache sempre que um recurso é encontrado
+### Formato JSON de Rede
 
-## Métodos de Busca
-
-- `bfs`: Busca em largura (Breadth-First Search)
-- `dfs`: Busca em profundidade (Depth-First Search)
-- `random`: Caminhada aleatória (Random Walk)
-
-## Estrutura de Arquivos
-
-Exemplos em: `graphs/examples/`
-
-O formato JSON de rede deve seguir:
 ```json
 {
   "num_nodes": 5,
   "min_neighbors": 0,
   "max_neighbors": 3,
   "resources": {
-    "n1": ["r1"],
-    "n2": ["r2"]
+    "n1": ["r1", "r2"],
+    "n2": ["r3"]
   },
   "edges": [
     ["n1", "n2"],
@@ -75,9 +159,227 @@ O formato JSON de rede deve seguir:
 }
 ```
 
+## Métodos de Busca
+
+- **BFS (Breadth-First Search):** Busca em largura, explora todos os vizinhos antes de ir para o próximo nível
+- **DFS (Depth-First Search):** Busca em profundidade, explora um caminho completamente antes de backtrack
+- **Random Walk:** Caminhada aleatória, escolhe vizinhos aleatoriamente (não-determinístico)
+
+## Resultados da Análise de Performance
+
+O sistema inclui um módulo de validação que executa benchmarks completos comparando os métodos de busca com e sem cache em uma rede hexagonal com **100 nós e 200 recursos** (120.000 queries totais).
+
+### Comparação de Passos Médios
+
+![Comparação de Passos](validation/avg_steps_comparison.png)
+
+*Gráfico mostrando o número médio de saltos (steps) necessários para encontrar recursos com cada método, comparando execução com e sem cache.*
+
+### Comparação de Tempo de Execução
+
+![Comparação de Tempo](validation/avg_time_comparison.png)
+
+*Gráfico mostrando o tempo médio de execução em milissegundos para cada método de busca, evidenciando a redução significativa com cache.*
+
+### Distribuição de Passos por Método
+
+![Distribuição de Passos](validation/steps_distribution.png)
+
+*Histogramas mostrando a distribuição do número de passos para cada método de busca (BFS, DFS, Random Walk) com e sem cache.*
+
+### Conclusões dos Resultados
+
+**Performance do Cache:**
+
+- **Redução de tempo em 10-50x:** Cache com modo diferido elimina 99% do I/O de arquivo
+- **Número de passos mantido ou reduzido:** Cache fornece caminhos ótimos ou próximos do ótimo
+- **Consistência em BFS/DFS:** Algoritmos determinísticos mostram resultados consistentes
+- **Melhoria em Random Walk:** Mesmo algoritmo não-determinístico beneficia-se do cache
+
+**Observações técnicas:**
+
+- Cache com modo `deferred_write=True` reduz escritas de 60.000 para 3 (uma por método)
+- Cache hits evitam travessia completa do grafo
+- Validação de caminhos garante correção mesmo com mudanças na rede
+
+## Executar Benchmark de Performance
+
+### 1. Gerar Rede Hexagonal
+
+```bash
+cd validation
+python generate_hexagonal_network.py
+```
+
+Isso cria `hexagonal_network.json` com:
+
+- 100 nós em topologia hexagonal
+- 200 recursos distribuídos
+- 257 arestas (conexões)
+- Grau médio: 5.14 vizinhos por nó
+
+### 2. Executar Benchmark
+
+```bash
+cd validation
+python benchmark.py
+```
+
+O benchmark executa:
+
+- **120.000 queries totais** (100 nós × 200 recursos × 3 métodos × 2 modos)
+- Fase 1: Todas queries SEM cache (baseline)
+- Fase 2: Todas queries COM cache (medindo benefício)
+- Salva resultados em `results.csv`
+- Cria arquivos de cache: `cache_bfs.json`, `cache_dfs.json`, `cache_random.json`
+
+**Tempo estimado:** 5-10 minutos
+
+### 3. Analisar Resultados
+
+```bash
+cd validation
+jupyter notebook analysis.ipynb
+```
+
+O notebook Jupyter gera:
+
+1. **Estatísticas agregadas:** Média, mediana, mín/máx de steps e tempo por método
+2. **Gráficos de barras:** Comparação cached vs non-cached
+3. **Histogramas:** Distribuição de steps para cada método
+4. **Tabela resumo:** Percentual de melhoria com cache
+
+### Estrutura de Resultados
+
+**Arquivo `results.csv`:**
+
+```csv
+node_id,resource,search_method,use_cache,steps,time_ms
+n1,r1,bfs,False,3,0.0234
+n1,r1,bfs,True,3,0.0012
+...
+```
+
+**Colunas:**
+
+- `node_id`: Nó que iniciou a busca
+- `resource`: Recurso buscado
+- `search_method`: Método usado (bfs, dfs, random)
+- `use_cache`: Se cache foi utilizado (True/False)
+- `steps`: Número de saltos até encontrar o recurso
+- `time_ms`: Tempo de execução em milissegundos
+
 ## Testes
 
-Execute os testes com:
+### Testes Unitários de Busca
+
 ```bash
 pytest tests/test_search.py -v
 ```
+
+Testa:
+
+- BFS, DFS e Random Walk com e sem cache
+- Correção dos caminhos retornados
+- Persistência de cache em arquivo
+- 21 testes no total
+
+### Testes de Performance de Cache
+
+```bash
+pytest tests/test_cache_performance.py -v
+```
+
+Testa:
+
+- Armazenamento correto de caminhos relativos
+- Ausência de duplicação de nós em caminhos
+- Modo deferred write (redução de I/O)
+- Validação de caminhos (método `follow()`)
+- 10 testes no total
+
+### Executar Todos os Testes
+
+```bash
+pytest tests/ -v
+```
+
+## Estrutura do Projeto
+
+```
+comp-dist-av3-2/
+├── src/
+│   ├── graph/
+│   │   ├── graph.py           # Classe Graph (topologia)
+│   │   ├── node.py            # Nó básico
+│   │   └── schema.py          # Schema JSON
+│   ├── network/
+│   │   ├── network.py         # Classe Network (recursos)
+│   │   ├── network_node.py    # Nó com recursos
+│   │   └── peer.py
+│   ├── cache/
+│   │   └── cache.py           # Classe Cache (distribuído)
+│   ├── search.py              # Classe NetworkSearch (algoritmos)
+│   ├── loader.py              # Carregadores de JSON
+│   ├── main.py                # Entry points
+│   └── config.py
+├── validation/
+│   ├── hexagonal_network.json # Rede de teste (100 nós)
+│   ├── generate_hexagonal_network.py
+│   ├── benchmark.py           # Script de benchmark
+│   ├── analysis.ipynb         # Análise com Polars/Matplotlib
+│   ├── results.csv            # Resultados (gerado)
+│   └── *.png                  # Gráficos (gerados)
+├── tests/
+│   ├── test_search.py         # Testes de busca
+│   └── test_cache_performance.py  # Testes de cache
+└── README.md
+```
+
+## Instalação
+
+### Pré-requisitos
+
+- Python 3.11 ou superior
+- [uv](https://github.com/astral-sh/uv) (gerenciador de pacotes rápido)
+
+### Instalação com uv (Recomendado)
+
+```bash
+# Instalar uv (se não tiver)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clonar repositório
+git clone <repo-url>
+cd comp-dist-av3-2
+
+# Sincronizar dependências
+uv sync
+```
+
+### Instalação com pip (Alternativa)
+
+```bash
+pip install -r requirements.txt
+```
+
+### Dependências Principais
+
+- **polars:** Processamento de dados (análise de resultados)
+- **matplotlib:** Visualização de gráficos
+- **jupyter:** Notebooks interativos
+- **pytest:** Framework de testes
+
+### Verificar Instalação
+
+```bash
+# Executar testes
+pytest tests/ -v
+
+# Executar exemplo
+uv run example --index 0 --search-method bfs --requester-id n1 --resource r1 --ttl 24
+```
+
+---
+
+**Desenvolvido como parte do curso de Computação Distribuída - UNIFOR 2024/2025**

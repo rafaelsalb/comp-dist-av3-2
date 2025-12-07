@@ -4,14 +4,147 @@ Version: 0.1.0
 Summary: Add your description here
 Requires-Python: >=3.13
 Description-Content-Type: text/markdown
+Requires-Dist: matplotlib>=3.10.7
+Requires-Dist: polars>=1.35.2
 Requires-Dist: pytest>=9.0.2
 
-```uv sync```
+# Distributed Systems Cache Simulation
 
-```uv run example --index 0 --search-method bfs --requester-id n1 --resource r1 --ttl 24```
+Simulação de sistema de cache distribuído para busca de recursos em redes P2P.
 
-```uv run example --index 1 --search-method dfs --requester-id n1 --resource r1 --ttl 24```
+## Instalação
 
-```uv run case --path teste.json --search-method random --requester-id n1 --resource r1 --ttl 24```
+```bash
+uv sync
+```
 
-Exemplos em: graphs/examples/
+## Uso
+
+### Exemplos pré-configurados
+
+```bash
+uv run example --index 0 --search-method bfs --requester-id n1 --resource r1 --ttl 24
+```
+
+```bash
+uv run example --index 1 --search-method dfs --requester-id n1 --resource r1 --ttl 24
+```
+
+### Caso customizado
+
+```bash
+uv run case --path teste.json --search-method random --requester-id n1 --resource r1 --ttl 24
+```
+
+### Uso com Cache
+
+Para habilitar o sistema de cache, adicione as flags `--use-cache` e opcionalmente `--cache-file`:
+
+```bash
+# Usando cache com arquivo padrão (cache.json)
+uv run example --index 0 --search-method bfs --requester-id n1 --resource r1 --ttl 24 --use-cache
+
+# Especificando arquivo de cache customizado
+uv run case --path teste.json --search-method bfs --requester-id n1 --resource r1 --ttl 24 --use-cache --cache-file my_cache.json
+```
+
+**Opções de cache:**
+- `--use-cache`: Habilita o sistema de cache
+- `--cache-file <path>`: Define o arquivo de cache (padrão: `cache.json`)
+
+O cache armazena os caminhos conhecidos para cada recurso em cada nó da rede. Quando habilitado:
+1. Antes de iniciar a busca, verifica se existe um caminho em cache
+2. Se encontrado, valida se o caminho ainda é válido
+3. Se válido, usa o caminho em cache (economizando buscas)
+4. Atualiza o cache sempre que um recurso é encontrado
+
+## Métodos de Busca
+
+- `bfs`: Busca em largura (Breadth-First Search)
+- `dfs`: Busca em profundidade (Depth-First Search)
+- `random`: Caminhada aleatória (Random Walk)
+
+## Estrutura de Arquivos
+
+Exemplos em: `graphs/examples/`
+
+O formato JSON de rede deve seguir:
+```json
+{
+  "num_nodes": 5,
+  "min_neighbors": 0,
+  "max_neighbors": 3,
+  "resources": {
+    "n1": ["r1"],
+    "n2": ["r2"]
+  },
+  "edges": [
+    ["n1", "n2"],
+    ["n2", "n3"]
+  ]
+}
+```
+
+## Testes
+
+Execute os testes com:
+```bash
+pytest tests/test_search.py -v
+```
+
+## Validação e Benchmark
+
+O módulo de validação permite comparar o desempenho dos diferentes métodos de busca com e sem cache em uma rede hexagonal robusta.
+
+### Executar Benchmark
+
+Para executar o benchmark completo:
+
+```bash
+cd validation
+python benchmark.py
+```
+
+O benchmark irá:
+- Usar uma rede hexagonal com 15 nós e 23 recursos
+- Testar todos os métodos de busca (BFS, DFS, Random Walk)
+- Executar cada método com e sem cache
+- Realizar ~690 queries totais (15 nós × 23 recursos × 3 métodos × 2 modos de cache)
+- Gerar arquivo `results.csv` com os resultados
+
+**Tempo estimado**: 2-5 minutos
+
+### Analisar Resultados
+
+Após executar o benchmark, analise os resultados com o Jupyter notebook:
+
+```bash
+cd validation
+jupyter notebook analysis.ipynb
+```
+
+O notebook gera:
+1. **Tabelas estatísticas**: Média, mediana, mín/máx de steps e tempo por método
+2. **Gráficos comparativos**: Barras comparando cached vs non-cached
+3. **Histogramas de distribuição**: Visualização da distribuição de steps para cada método
+4. **Análise de performance**: Percentual de melhoria com cache
+
+### Estrutura de Resultados
+
+O arquivo `results.csv` contém:
+- `node_id`: Nó que iniciou a busca
+- `resource`: Recurso buscado
+- `search_method`: Método usado (bfs, dfs, random)
+- `use_cache`: Se cache foi usado (True/False)
+- `steps`: Número de saltos até encontrar o recurso
+- `time_ms`: Tempo de execução em milissegundos
+
+### Arquivos de Validação
+
+```
+validation/
+├── hexagonal_network.json  # Rede de teste
+├── benchmark.py            # Script de benchmark
+├── analysis.ipynb          # Análise com Polars e Matplotlib
+└── results.csv             # Resultados (gerado pelo benchmark)
+```
