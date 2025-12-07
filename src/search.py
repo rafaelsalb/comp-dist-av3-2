@@ -1,5 +1,5 @@
-from typing import Callable
 from graph import Graph
+import random
 
 
 class NetworkSearch:
@@ -47,5 +47,30 @@ class NetworkSearch:
                 for neighbor in neighbors:
                     if neighbor not in visited:
                         stack.append((neighbor, path + [neighbor]))
+
+        return None
+
+    def random_walk(self, start_node_id: str, target_resource: str) -> list[str] | None:
+        visited = set()
+        current_node_id = start_node_id
+        path = [current_node_id]
+        jumps = 0
+
+        while jumps <= self.ttl:
+            current_node = self.network[current_node_id]
+
+            if current_node.has_resource(target_resource):
+                return path
+
+            visited.add(current_node_id)
+            neighbors = self.network.neighbors.get(current_node_id, [])
+            unvisited_neighbors = [n for n in neighbors if n not in visited]
+
+            if not unvisited_neighbors:
+                break
+
+            current_node_id = random.choice(unvisited_neighbors)
+            path.append(current_node_id)
+            jumps += 1
 
         return None

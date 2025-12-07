@@ -19,4 +19,5 @@ src/network/network.py
 src/network/network_node.py
 src/network/peer.py
 src/scripts/__init__.py
+src/scripts/create_case.py
 src/scripts/run.py

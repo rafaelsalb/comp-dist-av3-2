@@ -5,3 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
+
+[project.scripts]
+example = "scripts.run:example"
+case = "scripts.run:case"
+create = "scripts.create_case:template"
+
+[tool.uv]
+package = true

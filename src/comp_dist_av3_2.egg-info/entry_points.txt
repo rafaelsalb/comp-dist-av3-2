@@ -1,3 +1,4 @@
 [console_scripts]
 case = scripts.run:case
+create = scripts.create_case:template
 example = scripts.run:example

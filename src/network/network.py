@@ -40,6 +40,8 @@ class Network:
                 path = network_search.bfs(requester_id, resource)
             case "dfs":
                 path = network_search.dfs(requester_id, resource)
+            case "random":
+                path = network_search.random_walk(requester_id, resource)
             case _:
                 raise ValueError(f"Unknown search method: {search_method}")
-        return path is not None
+        return path
