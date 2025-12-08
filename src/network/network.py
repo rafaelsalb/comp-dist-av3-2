@@ -1,4 +1,5 @@
 from graph import Graph, GraphSchema
+from visualization.network import NetworkVisualizer
 from .network_node import NetworkNode
 from search import NetworkSearch
 from cache import Cache
@@ -8,9 +9,11 @@ import json
 
 class Network:
     graph: Graph
+    visualizer: NetworkVisualizer | None
 
-    def __init__(self, graph: Graph):
+    def __init__(self, graph: Graph, visualizer: NetworkVisualizer | None = None):
         self.graph = graph
+        self.visualizer = visualizer
 
     def __getitem__(self, name: str) -> Graph:
         return self.graph[name]
@@ -18,9 +21,18 @@ class Network:
     def __setitem__(self, name: str, value: NetworkNode) -> None:
         self.graph[name] = value
 
+    def create_visualizer(self):
+        visualizer = NetworkVisualizer(self.edge_list)
+        self.visualizer = visualizer
+        return self.visualizer
+
     @property
     def neighbors(self) -> dict[str, list[str]]:
         return self.graph.neighbors
+
+    @property
+    def edge_list(self) -> list[list[str, str]] | None:
+        return self.graph.edge_list
 
     @classmethod
     def from_schema(cls, schema: GraphSchema) -> "Network":
@@ -53,7 +65,7 @@ class Network:
 
             cache = Cache(nodes=cache_data, file_path=cache_path, network=self)
 
-        network_search = NetworkSearch(self, ttl, cache=cache)
+        network_search = NetworkSearch(self, ttl, cache=cache, visualize_step_function=self.visualizer.add_step)
         match search_method:
             case "bfs":
                 path = network_search.bfs(requester_id, resource, use_cache=use_cache)

@@ -5,6 +5,7 @@ from .node import Node
 class Graph:
     nodes: list[Node]
     neighbors: dict[str, list[Node]]
+    edge_list: list[tuple[str, str]] | None
 
     def __init__(self, nodes: list[Node] | None = None, neighbors: dict[str, list[Node]] | None = None):
         # Recomenda-se que se utilize métodos de fábrica
@@ -45,4 +46,5 @@ class Graph:
                     f"Node {node} has more than max_neighbors ({schema.max_neighbors})"
                 )
         instance = cls(nodes=nodes, neighbors=neighbors)
+        instance.edge_list = schema.edges
         return instance
