@@ -65,7 +65,7 @@ class Network:
 
             cache = Cache(nodes=cache_data, file_path=cache_path, network=self)
 
-        network_search = NetworkSearch(self, ttl, cache=cache, visualize_step_function=self.visualizer.add_step)
+        network_search = NetworkSearch(self, ttl, cache=cache, visualize_step_function=self.visualizer.add_step if self.visualizer else None)
         match search_method:
             case "bfs":
                 path = network_search.bfs(requester_id, resource, use_cache=use_cache)
