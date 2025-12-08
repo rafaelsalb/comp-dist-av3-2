@@ -1,13 +1,16 @@
+from typing import Callable
 from graph import Graph
 import random
 from cache import Cache
+from visualization.step import VisualizationStep
 
 
 class NetworkSearch:
-    def __init__(self, network: Graph, ttl: int,  cache: Cache| None = None):
+    def __init__(self, network: Graph, ttl: int,  cache: Cache| None = None, visualize_step_function: Callable | None = None):
         self.network = network
         self.cache = cache
         self.ttl = ttl
+        self.step_function = visualize_step_function
 
     def _use_cache(self, target_resource: str, current_path: list[str]) -> list[str] | None:
         if self.cache is None:
@@ -36,9 +39,12 @@ class NetworkSearch:
             current_node_id, path = queue.pop(0)
             current_node = self.network[current_node_id]
 
+            self.save_step(start_node_id, current_node_id, visited, path, False)
+
             if current_node.has_resource(target_resource):
                 if self.cache:
                     self.cache.update(target_resource, path)
+                self.save_step(start_node_id, current_node_id, visited, path, True)
                 return path
 
             if current_node_id not in visited:
@@ -49,6 +55,7 @@ class NetworkSearch:
                         queue.append((neighbor, path + [neighbor]))
             jumps += 1
 
+        self.save_step(start_node_id, None, visited, path, False)
         return None
 
     def dfs(self, start_node_id: str, target_resource: str, use_cache: bool = False) -> list[str] | None:
@@ -65,9 +72,12 @@ class NetworkSearch:
             current_node_id, path = stack.pop()
             current_node = self.network[current_node_id]
 
+            self.save_step(start_node_id, current_node_id, visited, path, False)
+
             if current_node.has_resource(target_resource):
                 if self.cache:
                     self.cache.update(target_resource, path)
+                self.save_step(start_node_id, current_node_id, visited, path, True)
                 return path
 
             if current_node_id not in visited:
@@ -78,6 +88,7 @@ class NetworkSearch:
                         stack.append((neighbor, path + [neighbor]))
             jumps += 1
 
+        self.save_step(start_node_id, None, visited, path, False)
         return None
 
     def random_walk(self, start_node_id: str, target_resource: str, use_cache: bool = False) -> list[str] | None:
@@ -94,9 +105,12 @@ class NetworkSearch:
 
             current_node = self.network[current_node_id]
 
+            self.save_step(start_node_id, current_node_id, visited, path, False)
+
             if current_node.has_resource(target_resource):
                 if self.cache:
                     self.cache.update(target_resource, path)
+                self.save_step(start_node_id, current_node_id, visited, path, True)
                 return path
 
             visited.add(current_node_id)
@@ -110,4 +124,10 @@ class NetworkSearch:
             path.append(current_node_id)
             jumps += 1
 
+        self.save_step(start_node_id, None, visited, path, True)
         return None
+
+    def save_step(self, requester_id: str, current_node_id: str, visited_nodes: set[str], path: list[str], found: bool):
+        if self.step_function:
+            step = VisualizationStep(requester_id=requester_id, current_node_id=current_node_id, visited_nodes=visited_nodes, path=path, found=found)
+            self.step_function(step)

@@ -24,4 +24,7 @@ src/network/peer.py
 src/scripts/__init__.py
 src/scripts/create_case.py
 src/scripts/run.py
+src/visualization/__init__.py
+src/visualization/network.py
+tests/test_cache_performance.py
 tests/test_search.py
