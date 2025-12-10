@@ -36,6 +36,7 @@ class Graph:
         neighbors = {node.id: [] for node in nodes}
         for edge in schema.edges:
             neighbors[edge[0]].append(edge[1])
+            neighbors[edge[1]].append(edge[0])
         for node in neighbors:
             if len(neighbors[node]) < schema.min_neighbors:
                 raise ValueError(

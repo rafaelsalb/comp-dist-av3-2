@@ -8,3 +8,4 @@ class VisualizationStep:
     visited_nodes: set[str]
     path: list[str]
     found: bool
+    ttl: int

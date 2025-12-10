@@ -18,6 +18,9 @@ def example(case_index: int = 1, search_method: str = "bfs", requester_id: str |
         case 2:
             print("Executando o caso de exemplo 2...")
             case_path = Config.EXAMPLES_DIR / "ex2.json"
+        case 3:
+            print("Executando o caso de exemplo 3...")
+            case_path = Config.EXAMPLES_DIR / "ex3.json"
         case _:
             print(f"Caso de exemplo {case_index} não encontrado.")
             return

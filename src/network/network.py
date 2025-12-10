@@ -46,7 +46,7 @@ class Network:
     def __repr__(self) -> str:
         return f"Network(graph={self.graph})"
 
-    def fetch(self, requester_id: str, resource: str, search_method: str = "bfs", ttl: int | None = None, use_cache: bool = False, cache_file: str | None = None) -> bool:
+    def fetch(self, requester_id: str, resource: str, search_method: str = "flood", ttl: int | None = None, use_cache: bool = False, cache_file: str | None = None) -> bool:
         if ttl is None:
             raise ValueError("TTL must be specified for fetch operation")
 
@@ -73,6 +73,8 @@ class Network:
                 path = network_search.dfs(requester_id, resource, use_cache=use_cache)
             case "random":
                 path = network_search.random_walk(requester_id, resource, use_cache=use_cache)
+            case "flood":
+                path = network_search.flood(requester_id, resource, use_cache=use_cache)
             case _:
                 raise ValueError(f"Unknown search method: {search_method}")
         return path
