@@ -73,6 +73,8 @@ class Network:
                 path = network_search.dfs(requester_id, resource, use_cache=use_cache)
             case "random":
                 path = network_search.random_walk(requester_id, resource, use_cache=use_cache)
+            case "flood_parallel":
+                path = network_search.flood_parallel(requester_id, resource, use_cache=use_cache)
             case "flood":
                 path = network_search.flood(requester_id, resource, use_cache=use_cache)
             case _:

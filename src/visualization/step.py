@@ -9,3 +9,4 @@ class VisualizationStep:
     path: list[str]
     found: bool
     ttl: int
+    thread_id: int | None = None

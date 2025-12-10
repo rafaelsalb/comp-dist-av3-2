@@ -18,7 +18,9 @@ class NetworkVisualizer:
         G.add_edges_from(self.edges)
         pos = nx.spring_layout(G)
 
-        for step in self.steps:
+        steps = sorted(self.steps.copy(), key=lambda s: (s.thread_id if s.thread_id is not None else 0, self.steps.index(s)))
+
+        for step in steps:
             plt.clf()
             node_colors = []
             for node in G.nodes():
@@ -33,8 +35,8 @@ class NetworkVisualizer:
                 else:
                     node_colors.append('white')
 
-            plt.suptitle(f"Step Visualization")
-            plt.text(0.5, 0.01, f"Requester: {step.requester_id} | Current Node: {step.current_node_id} Visited: {step.visited_nodes}", ha='center', va='bottom', transform=plt.gcf().transFigure)
+            plt.suptitle(f"Step Visualization, Thread ID: {getattr(step, 'thread_id', 'N/A')}")
+            plt.text(0.5, 0.01, f"Requester: {step.requester_id} | Current Node: {step.current_node_id} | Visited: {step.visited_nodes}", ha='center', va='bottom', transform=plt.gcf().transFigure)
             plt.text(0.5, 0.05, f"TTL: {step.ttl} | Found: {step.found} | Path: {step.path}", ha='center', va='bottom', transform=plt.gcf().transFigure)
             nx.draw(G, pos, with_labels=True, node_color=node_colors, edge_color='gray', node_size=500)
             if self.steps.index(step) == len(self.steps) - 1:

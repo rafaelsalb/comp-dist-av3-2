@@ -8,3 +8,4 @@ class Packet:
     seq_num: int
     ttl: int
     path: list[int | str] | None = None
+    thread_id: int | None = None
